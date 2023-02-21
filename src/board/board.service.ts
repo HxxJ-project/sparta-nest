@@ -1,63 +1,74 @@
-import _ from 'lodash';
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import _ from 'lodash';
+import { ArticleRepository } from './article.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './article.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class BoardService {
-  // constructor(
-  //   @InjectRepository(Article) private articleRepository: Repository<Article>,
-  // ) {}
+  constructor(
+    @InjectRepository(ArticleRepository)
+    private articleRepository: ArticleRepository,
+  ) {}
 
-  // 원래는 repository를 참조하여 비지니스 로직을 실행을 해야하지만 여기서는 인-메모리로 해결
-  private articles = [];
-
-  private articlePassword = new Map();
-
-  getArticles() {
-    return this.articles;
+  async getArticles() {
+    return await this.articleRepository.find({
+      where: { deletedAt: null },
+      select: ['id', 'author', 'title', 'createdAt'],
+    });
   }
 
-  getArticleById(id: number) {
-    return this.articles.find((article) => {
-      return article.id === id;
+  async getArticleById(id: number) {
+    return await this.articleRepository.findOne({
+      where: { id, deletedAt: null },
+      select: ['author', 'title', 'content', 'createdAt', 'updatedAt'],
     });
+  }
+
+  // 일반 리포지토리엔 없는 커스텀 리포지터리에만 있는 함수!
+  async getHotArticles() {
+    return await this.articleRepository.getArticlesByViewCount();
   }
 
   createArticle(title: string, content: string, password: number) {
-    const articleId = this.articles.length + 1;
-    this.articles.push({ id: articleId, title, content });
-    this.articlePassword.set(articleId, password);
-    return articleId;
+    this.articleRepository.insert({
+      author: 'test',
+      title,
+      content,
+      password: password.toString(),
+    });
   }
 
-  updateArticle(id: number, title: string, content: string, password: number) {
-    if (this.articlePassword.get(id) !== password) {
-      throw new UnauthorizedException('Password is not correct. id:' + id);
-    }
+  async updateArticle(
+    id: number,
+    title: string,
+    content: string,
+    password: number,
+  ) {
+    await this.verifyPassword(id, password);
+    this.articleRepository.update(id, { title, content });
+  }
 
-    const article = this.getArticleById(id);
+  async deleteArticle(id: number, password: number) {
+    await this.verifyPassword(id, password);
+    this.articleRepository.softDelete(id);
+  }
+
+  private async verifyPassword(id: number, password: number) {
+    const article = await this.articleRepository.findOne({
+      where: { id, deletedAt: null },
+      select: ['password'],
+    });
+
     if (_.isNil(article)) {
       throw new NotFoundException('Article not found. id:' + id);
     }
-
-    article.title = title;
-    article.content = content;
-  }
-
-  deleteArticle(id: number, password: number) {
-    if (this.articlePassword.get(id) !== password) {
-      throw new UnauthorizedException('Password is not correct. id:' + id);
+    if (article.password !== password.toString()) {
+      throw new UnauthorizedException(`Password is not corrected. id: ${id}`);
     }
-
-    // article 배열안에 인자값으로 전달받은 id가 아닌것만 필터링
-    this.articles = this.articles.filter((article) => {
-      return article.id !== id;
-    });
   }
 }

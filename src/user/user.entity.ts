@@ -3,29 +3,25 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity({ schema: 'board', name: 'articles' })
-export class Article {
+export class User {
   @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
   id: number;
 
+  @Index({ unique: true })
+  @Column()
+  userId: string;
+
   @Column('varchar', { length: 10 })
-  author: string;
-
-  @Column('varchar', { length: 50 })
-  title: string;
-
-  @Column('varchar', { length: 1000 })
-  content: string;
+  name: string;
 
   @Column('varchar', { length: 10, select: false })
   password: string;
-
-  @Column('int')
-  view: number; // 새로 추가된 컬럼!
 
   @CreateDateColumn()
   createdAt: Date;

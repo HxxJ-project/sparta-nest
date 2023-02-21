@@ -1,5 +1,3 @@
-import { CreateArticleDto } from './dto/create-article.dto';
-import { BoardService } from './board.service';
 import {
   Param,
   Body,
@@ -9,6 +7,8 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { BoardService } from './board.service';
+import { CreateArticleDto } from './dto/create-article.dto';
 import { DeleteArticleDto } from './dto/delete-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
@@ -19,14 +19,19 @@ export class BoardController {
 
   // 게시물 목록을 가져오는 API
   @Get('/articles')
-  getArticles() {
-    return this.boardService.getArticles();
+  async getArticles() {
+    return await this.boardService.getArticles();
   }
 
   // 게시물 상세보기 -> 게시물 ID로 확인
   @Get('/articles/:id')
-  getArticleById(@Param('id') articleId: number) {
-    return this.boardService.getArticleById(articleId);
+  async getArticleById(@Param('id') articleId: number) {
+    return await this.boardService.getArticleById(articleId);
+  }
+  // 조회수 높은 순 정렬
+  @Get('/hot-articles')
+  async getHotArticles() {
+    return await this.boardService.getHotArticles();
   }
 
   // 게시물 작성
@@ -42,11 +47,11 @@ export class BoardController {
 
   // 게시물 수정
   @Put('/articles/:id')
-  updateArticle(
+  async updateArticle(
     @Param('id') articleId: number,
     @Body() data: UpdateArticleDto,
   ) {
-    return this.boardService.updateArticle(
+    return await this.boardService.updateArticle(
       articleId,
       data.title,
       data.content,
@@ -56,10 +61,10 @@ export class BoardController {
 
   // 게시물 삭제
   @Delete('/articles/:id')
-  deleteArticle(
+  async deleteArticle(
     @Param('id') articleId: number,
     @Body() data: DeleteArticleDto,
   ) {
-    return this.boardService.deleteArticle(articleId, data.password);
+    return await this.boardService.deleteArticle(articleId, data.password);
   }
 }
