@@ -10,10 +10,7 @@ import { Article } from './article.entity';
 
 @Injectable()
 export class BoardService {
-  constructor(
-    @InjectRepository(ArticleRepository)
-    private articleRepository: ArticleRepository,
-  ) {}
+  constructor(private articleRepository: ArticleRepository) {}
 
   async getArticles() {
     return await this.articleRepository.find({
@@ -33,6 +30,14 @@ export class BoardService {
   async getHotArticles() {
     return await this.articleRepository.getArticlesByViewCount();
   }
+  // repository 파일 생성 안하고 아래코드처럼 find사용해서 작성 가능
+  // async getHotArticles() {
+  //   return await this.articleRepository.find({
+  //     order: {
+  //       view: 'DESC',
+  //     },
+  //   });
+  // }
 
   createArticle(title: string, content: string, password: number) {
     this.articleRepository.insert({

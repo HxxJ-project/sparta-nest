@@ -9,7 +9,4 @@ export class CreateArticleDto {
 
   @IsNumber()
   readonly password: number;
-
-  @IsNumber()
-  readonly view: number;
 }
